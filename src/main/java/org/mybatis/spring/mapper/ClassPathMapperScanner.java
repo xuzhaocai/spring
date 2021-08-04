@@ -171,7 +171,6 @@ public class ClassPathMapperScanner extends ClassPathBeanDefinitionScanner {
       addIncludeFilter(new AnnotationTypeFilter(this.annotationClass));
       acceptAllInterfaces = false;
     }
-
     // override AssignableTypeFilter to ignore matches on the actual marker interface
     if (this.markerInterface != null) {
       addIncludeFilter(new AssignableTypeFilter(this.markerInterface) {
@@ -182,13 +181,11 @@ public class ClassPathMapperScanner extends ClassPathBeanDefinitionScanner {
       });
       acceptAllInterfaces = false;
     }
-
-    if (acceptAllInterfaces) {
+    if (acceptAllInterfaces) {// 接受所有接口
       // default include filter that accepts all classes
       addIncludeFilter((metadataReader, metadataReaderFactory) -> true);
     }
-
-    // exclude package-info.java
+    // exclude package-info.java  排除 package-info.java
     addExcludeFilter((metadataReader, metadataReaderFactory) -> {
       String className = metadataReader.getClassMetadata().getClassName();
       return className.endsWith("package-info");
@@ -198,15 +195,21 @@ public class ClassPathMapperScanner extends ClassPathBeanDefinitionScanner {
   /**
    * Calls the parent search that will search and register all the candidates. Then the registered objects are post
    * processed to set them as MapperFactoryBeans
+   *
+   * 真正扫描
    */
   @Override
   public Set<BeanDefinitionHolder> doScan(String... basePackages) {
+
+    // 调用父类进行扫描
     Set<BeanDefinitionHolder> beanDefinitions = super.doScan(basePackages);
 
     if (beanDefinitions.isEmpty()) {
       LOGGER.warn(() -> "No MyBatis mapper was found in '" + Arrays.toString(basePackages)
           + "' package. Please check your configuration.");
     } else {
+
+      // 处理BeanDefinition
       processBeanDefinitions(beanDefinitions);
     }
 
@@ -233,7 +236,7 @@ public class ClassPathMapperScanner extends ClassPathBeanDefinitionScanner {
       // the mapper interface is the original class of the bean
       // but, the actual class of the bean is MapperFactoryBean
       definition.getConstructorArgumentValues().addGenericArgumentValue(beanClassName); // issue #59
-      definition.setBeanClass(this.mapperFactoryBeanClass);
+      definition.setBeanClass(this.mapperFactoryBeanClass);// 设置beanClass  ,其实是个FactoryBean
 
       definition.getPropertyValues().add("addToConfig", this.addToConfig);
 
@@ -288,6 +291,9 @@ public class ClassPathMapperScanner extends ClassPathBeanDefinitionScanner {
         if (registry.containsBeanDefinition(proxyHolder.getBeanName())) {
           registry.removeBeanDefinition(proxyHolder.getBeanName());
         }
+
+
+        // 注册 mapper 接口对应的代理类
         registry.registerBeanDefinition(proxyHolder.getBeanName(), proxyHolder.getBeanDefinition());
       }
 

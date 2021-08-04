@@ -487,7 +487,7 @@ public class SqlSessionFactoryBean
     notNull(sqlSessionFactoryBuilder, "Property 'sqlSessionFactoryBuilder' is required");
     state((configuration == null && configLocation == null) || !(configuration != null && configLocation != null),
         "Property 'configuration' and 'configLocation' can not specified with together");
-
+    // 构建sqlSessionFactory
     this.sqlSessionFactory = buildSqlSessionFactory();
   }
 
@@ -503,9 +503,7 @@ public class SqlSessionFactoryBean
    *           if configuration is failed
    */
   protected SqlSessionFactory buildSqlSessionFactory() throws Exception {
-
     final Configuration targetConfiguration;
-
     XMLConfigBuilder xmlConfigBuilder = null;
     if (this.configuration != null) {
       targetConfiguration = this.configuration;
@@ -514,7 +512,9 @@ public class SqlSessionFactoryBean
       } else if (this.configurationProperties != null) {
         targetConfiguration.getVariables().putAll(this.configurationProperties);
       }
+      //如果有配置文件的话
     } else if (this.configLocation != null) {
+      //解析配置文件
       xmlConfigBuilder = new XMLConfigBuilder(this.configLocation.getInputStream(), null, this.configurationProperties);
       targetConfiguration = xmlConfigBuilder.getConfiguration();
     } else {
@@ -581,7 +581,7 @@ public class SqlSessionFactoryBean
     }
 
     Optional.ofNullable(this.cache).ifPresent(targetConfiguration::addCache);
-
+    //如果有xml 配置文件
     if (xmlConfigBuilder != null) {
       try {
         xmlConfigBuilder.parse();
@@ -596,18 +596,27 @@ public class SqlSessionFactoryBean
     targetConfiguration.setEnvironment(new Environment(this.environment,
         this.transactionFactory == null ? new SpringManagedTransactionFactory() : this.transactionFactory,
         this.dataSource));
-
+    // 如果mapper xml地址不是空，进行解析
     if (this.mapperLocations != null) {
       if (this.mapperLocations.length == 0) {
         LOGGER.warn(() -> "Property 'mapperLocations' was specified but matching resources are not found.");
       } else {
+
+        //遍历
         for (Resource mapperLocation : this.mapperLocations) {
           if (mapperLocation == null) {
             continue;
           }
           try {
-            XMLMapperBuilder xmlMapperBuilder = new XMLMapperBuilder(mapperLocation.getInputStream(),
-                targetConfiguration, mapperLocation.toString(), targetConfiguration.getSqlFragments());
+
+            // 这里解析xml文件
+            XMLMapperBuilder xmlMapperBuilder =
+              new XMLMapperBuilder(
+                mapperLocation.getInputStream(),
+                targetConfiguration,
+                mapperLocation.toString(),
+                targetConfiguration.getSqlFragments()  //将configuration中的sql片段集合放入了解析器中
+              );
             xmlMapperBuilder.parse();
           } catch (Exception e) {
             throw new NestedIOException("Failed to parse mapping resource: '" + mapperLocation + "'", e);

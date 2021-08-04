@@ -90,7 +90,7 @@ import org.springframework.util.StringUtils;
  */
 public class MapperScannerConfigurer
     implements BeanDefinitionRegistryPostProcessor, InitializingBean, ApplicationContextAware, BeanNameAware {
-
+  // 基础包
   private String basePackage;
 
   private boolean addToConfig = true;
@@ -356,6 +356,8 @@ public class MapperScannerConfigurer
 
     ClassPathMapperScanner scanner = new ClassPathMapperScanner(registry);
     scanner.setAddToConfig(this.addToConfig);
+
+    // @Mapper注解
     scanner.setAnnotationClass(this.annotationClass);
     scanner.setMarkerInterface(this.markerInterface);
     scanner.setSqlSessionFactory(this.sqlSessionFactory);
@@ -371,6 +373,8 @@ public class MapperScannerConfigurer
     if (StringUtils.hasText(defaultScope)) {
       scanner.setDefaultScope(defaultScope);
     }
+
+    // 注册过滤器
     scanner.registerFilters();
     scanner.scan(
         StringUtils.tokenizeToStringArray(this.basePackage, ConfigurableApplicationContext.CONFIG_LOCATION_DELIMITERS));

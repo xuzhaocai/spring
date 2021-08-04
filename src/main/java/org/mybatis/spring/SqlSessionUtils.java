@@ -93,17 +93,15 @@ public final class SqlSessionUtils {
 
     notNull(sessionFactory, NO_SQL_SESSION_FACTORY_SPECIFIED);
     notNull(executorType, NO_EXECUTOR_TYPE_SPECIFIED);
-
     SqlSessionHolder holder = (SqlSessionHolder) TransactionSynchronizationManager.getResource(sessionFactory);
-
     SqlSession session = sessionHolder(executorType, holder);
     if (session != null) {
       return session;
     }
-
+    // 如果没有的话，找 sessionFactory 创建一个新的
     LOGGER.debug(() -> "Creating a new SqlSession");
     session = sessionFactory.openSession(executorType);
-
+    // 将创建出来的session 注册到当前的事务管理器中
     registerSessionHolder(sessionFactory, executorType, exceptionTranslator, session);
 
     return session;
